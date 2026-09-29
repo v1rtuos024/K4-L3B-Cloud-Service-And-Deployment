@@ -13,7 +13,8 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
-    autoDeployTrigger: commit
+    # GitHub Actions deploys the tested commit through the secret deploy hook.
+    autoDeployTrigger: "off"
     healthCheckPath: /health
     envVars:
       - key: AGENT_API_KEY

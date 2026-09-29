@@ -1,7 +1,35 @@
 # K4 — Level 3B, Ngày 12: Hạ Tầng Cloud & Deployment (240 phút)
 
+[![CI/CD](https://github.com/v1rtuos024/K4-L3B-Cloud-Service-And-Deployment/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/v1rtuos024/K4-L3B-Cloud-Service-And-Deployment/actions/workflows/ci.yml)
+
 Đưa một AI agent từ `localhost:8000` lên một địa chỉ công khai mà người khác
 gọi được, có bảo mật, có giới hạn chi phí, và không sập khi bạn deploy bản mới.
+
+## CI/CD
+
+Workflow `.github/workflows/ci.yml` chạy khi push hoặc pull request:
+**tests → build Docker → deploy Render**. Job deploy chỉ chạy khi push lên
+`main` và cả test lẫn build thành công. Deploy hook được gọi với commit SHA
+đã kiểm tra; pull request không deploy.
+
+Thiết lập một lần:
+
+1. Render → `day12-agent` → Settings → Deploy Hook: copy URL bí mật.
+2. GitHub → Settings → Secrets and variables → Actions: thêm repository
+   secret `RENDER_DEPLOY_HOOK_URL` với URL đó. Không ghi URL vào repository.
+3. Render → Settings → Auto-Deploy: chọn **Off**; Blueprint cũng khai báo
+   `autoDeployTrigger: "off"` để mọi deploy tự động đi qua workflow.
+
+CI chạy CP1–CP4 và các kiểm tra cấu hình bonus. Test CP5 chạy riêng trên URL
+cloud; test badge chạy sau khi GitHub Actions kết thúc để tránh phụ thuộc
+vào kết quả của chính workflow đang chạy.
+
+```bash
+pytest tests/test_cp5.py -v
+pytest tests/test_bonus_cicd.py -v
+```
+
+Tham khảo [Render Deploy Hooks](https://render.com/docs/deploy-hooks).
 
 ---
 

@@ -106,10 +106,10 @@ x-render-origin-server: uvicorn
 
 ## Ảnh Chụp Màn Hình
 
-Đặt ảnh trong thư mục `screenshots/`:
+Ảnh minh chứng đã lưu trong thư mục `screenshots/`:
 
-- `screenshots/dashboard.png` — chưa có; chụp Dashboard của service trên Render.
-- `screenshots/health.png` — chưa có; chụp kết quả `/health` từ trình duyệt hoặc curl.
+- [Dashboard Render](screenshots/dashboard.png) — service `day12-agent`, bản deploy Live.
+- [Kết quả /health](screenshots/health.png) — Public URL trả JSON `status: ok`.
 
 ---
 
@@ -122,7 +122,7 @@ bộ và dùng `noeviction` để không tự loại các key rate limit/ngân s
 Blueprint đã được kiểm tra bằng JSON Schema chính thức của Render.
 Render xác nhận deploy `dep-datjg87avr4c73dq0hv0` có trạng thái `live` và
 Key Value có trạng thái `available`. Ba kiểm tra HTTP bắt buộc đều đạt.
-Hai ảnh minh chứng vẫn cần bổ sung trước khi nộp bài.
+Hai ảnh minh chứng Dashboard và `/health` đã được bổ sung và kiểm tra.
 
 Key Value Free không có disk persistence (`persistenceMode: off`): history
 và các bộ đếm sống qua restart của web service, nhưng có thể mất nếu chính
