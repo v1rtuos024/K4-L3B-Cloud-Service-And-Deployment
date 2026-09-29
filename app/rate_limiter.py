@@ -13,6 +13,7 @@ import time
 import uuid
 
 from fastapi import HTTPException, status
+from redis.exceptions import WatchError
 
 WINDOW_SECONDS = 60
 
@@ -30,18 +31,21 @@ class RateLimiter:
     def hit_count(self, user_id: str, now: float | None = None) -> int:
         """Số request của user trong ``WINDOW_SECONDS`` giây gần nhất.
 
-        TODO (CP3):
+        Quy trình:
           1. ``now = now if now is not None else time.time()``
           2. Xóa các entry cũ hơn cửa sổ:
              ``self.client.zremrangebyscore(key, 0, now - WINDOW_SECONDS)``
           3. Trả về ``self.client.zcard(key)``
         """
-        raise NotImplementedError("TODO (CP3): cài đặt hit_count")
+        now = now if now is not None else time.time()
+        key = self._key(user_id)
+        self.client.zremrangebyscore(key, "-inf", now - WINDOW_SECONDS)
+        return self.client.zcard(key)
 
     def check(self, user_id: str, now: float | None = None) -> None:
         """Cho qua nếu còn quota, ngược lại raise 429.
 
-        TODO (CP3):
+        Quy trình:
           1. ``now = now if now is not None else time.time()``
           2. Gọi ``self.hit_count(user_id, now)``.
           3. Nếu số đó ``>= self.limit`` → raise
@@ -56,4 +60,25 @@ class RateLimiter:
         Lưu ý thứ tự: **kiểm tra trước, ghi nhận sau**. Ghi trước rồi mới đếm
         sẽ chặn nhầm ngay ở request thứ ``limit``.
         """
-        raise NotImplementedError("TODO (CP3): cài đặt check")
+        now = now if now is not None else time.time()
+        key = self._key(user_id)
+        self.hit_count(user_id, now)
+
+        # WATCH retries if another instance records a request after our count.
+        while True:
+            with self.client.pipeline() as pipe:
+                try:
+                    pipe.watch(key)
+                    if pipe.zcard(key) >= self.limit:
+                        raise HTTPException(
+                            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail="rate limit exceeded",
+                            headers={"Retry-After": str(WINDOW_SECONDS)},
+                        )
+                    pipe.multi()
+                    pipe.zadd(key, {f"{now}:{uuid.uuid4().hex}": now})
+                    pipe.expire(key, WINDOW_SECONDS)
+                    pipe.execute()
+                    return
+                except WatchError:
+                    continue
