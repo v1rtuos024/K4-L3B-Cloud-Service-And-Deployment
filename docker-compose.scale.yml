@@ -1,0 +1,6 @@
+# Compose >= 2.24.4; give each replica its own dynamically assigned local port.
+# docker compose -f docker-compose.yml -f docker-compose.scale.yml up -d --scale agent=3
+services:
+  agent:
+    ports: !override
+      - "127.0.0.1::8000"
